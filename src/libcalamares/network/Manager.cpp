@@ -30,7 +30,7 @@ RequestOptions::applyToRequest( QNetworkRequest* request ) const
     if ( m_flags & Flag::FollowRedirect )
     {
         // Follows all redirects except unsafe ones (https to http).
-        request->setAttribute( QNetworkRequest::FollowRedirectsAttribute, true );
+        request->setAttribute( QNetworkRequest::RedirectPolicyAttribute, true );
     }
 
     if ( m_flags & Flag::FakeUserAgent )
