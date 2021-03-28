@@ -38,8 +38,7 @@
 # One special target is "show-version", which can be built
 # to obtain the version number from here.
 
-# TODO:3.3: Require CMake 3.12
-cmake_minimum_required( VERSION 3.3 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.15 FATAL_ERROR )
 
 set( CALAMARES_VERSION 3.2.40 )
 set( CALAMARES_RELEASE_MODE OFF )
