@@ -148,8 +148,8 @@ set( _tx_incomplete eo fr_CH gu id_ID ie kk kn lo lv mk ne ne_NP si
 set( QT_VERSION 5.9.0 )
 set( YAMLCPP_VERSION 0.5.1 )
 set( ECM_VERSION 5.18 )
-set( PYTHONLIBS_VERSION 3.3 )
-set( BOOSTPYTHON_VERSION 1.55.0 )
+set( PYTHONLIBS_VERSION 3.6 )
+set( BOOSTPYTHON_VERSION 1.67.0 )
 
 
 ### CMAKE SETUP
