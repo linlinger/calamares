@@ -11,7 +11,6 @@
 #
 #   Calamares is Free Software: see the License-Identifier above.
 #
-
 import libcalamares
 from libcalamares.utils import debug, target_env_call
 import os
@@ -41,7 +40,7 @@ def cpuinfo():
 
     nprocs = 0
 
-    with open('/proc/cpuinfo') as cpuinfo_file:
+    with open("/proc/cpuinfo") as cpuinfo_file:
         for line in cpuinfo_file:
             if not line.strip():
                 # end of one processor
@@ -50,11 +49,11 @@ def cpuinfo():
                 # Reset
                 procinfo = OrderedDict()
             else:
-                if len(line.split(':')) == 2:
-                    splitted_line = line.split(':')[1].strip()
-                    procinfo[line.split(':')[0].strip()] = splitted_line
+                if len(line.split(":")) == 2:
+                    splitted_line = line.split(":")[1].strip()
+                    procinfo[line.split(":")[0].strip()] = splitted_line
                 else:
-                    procinfo[line.split(':')[0].strip()] = ''
+                    procinfo[line.split(":")[0].strip()] = ""
 
     return cpu_info
 
@@ -73,24 +72,25 @@ def write_mkinitcpio_lines(hooks, modules, files, root_mount_point):
         with open(hostfile, "r") as mkinitcpio_file:
             mklins = [x.strip() for x in mkinitcpio_file.readlines()]
     except FileNotFoundError:
-        libcalamares.utils.debug("Could not open host file '%s'" % hostfile)
+        libcalamares.utils.debug(f"Could not open host file {hostfile}")
         mklins = []
 
     for i in range(len(mklins)):
         if mklins[i].startswith("HOOKS"):
-            joined_hooks = ' '.join(hooks)
-            mklins[i] = "HOOKS=\"{!s}\"".format(joined_hooks)
+            joined_hooks = " ".join(hooks)
+            mklins[i] = 'HOOKS="{!s}"'.format(joined_hooks)
         elif mklins[i].startswith("MODULES"):
             joined_modules = ' '.join(modules)
-            mklins[i] = "MODULES=\"{!s}\"".format(joined_modules)
+            mklins[i] = 'MODULES="{!s}"'.format(joined_modules)
         elif mklins[i].startswith("FILES"):
             joined_files = ' '.join(files)
-            mklins[i] = "FILES=\"{!s}\"".format(joined_files)
+            mklins[i] = 'FILES="{!s}"'.format(joined_files)
 
     path = os.path.join(root_mount_point, "etc/mkinitcpio.conf")
 
     with open(path, "w") as mkinitcpio_file:
         mkinitcpio_file.write("\n".join(mklins) + "\n")
+
 
 def detect_plymouth():
     """
@@ -99,10 +99,11 @@ def detect_plymouth():
     @return True if plymouth exists in the target, False otherwise
     """
     # Used to only check existence of path /usr/bin/plymouth in target
-    isPlymouth = target_env_call(["sh", "-c", "which plymouth"])
-    debug("which plymouth exit code: {!s}".format(isPlymouth))
+    is_plymouth = target_env_call(["sh", "-c", "which plymouth"])
+    debug(f"which plymouth exit code: {is_plymouth}")
 
-    return isPlymouth == 0
+    return is_plymouth == 0
+
 
 def modify_mkinitcpio_conf(partitions, root_mount_point):
     """
@@ -113,21 +114,31 @@ def modify_mkinitcpio_conf(partitions, root_mount_point):
     """
     cpu = cpuinfo()
     swap_uuid = ""
-    btrfs = ""
-    lvm2 = ""
-    hooks = ["base", "udev", "autodetect", "modconf", "block", "keyboard",
-             "keymap"]
+    btrfs = False
+    lvm2 = False
+    hooks = [
+        "base",
+        "udev",
+        "autodetect",
+        "modconf",
+        "block",
+        "keyboard",
+        "keymap"
+    ]
     modules = []
     files = []
     encrypt_hook = False
     openswap_hook = False
     unencrypted_separate_boot = False
+    is_cpu_intel = cpu["proc0"]["vendor_id"].lower() == "genuineintel"
 
     # It is important that the plymouth hook comes before any encrypt hook
     if detect_plymouth():
         hooks.append("plymouth")
 
     for partition in partitions:
+        hooks.extend(["filesystems"])
+
         if partition["fs"] == "linuxswap" and not partition.get("claimed", None):
             # Skip foreign swap
             continue
@@ -138,47 +149,46 @@ def modify_mkinitcpio_conf(partitions, root_mount_point):
                 openswap_hook = True
 
         if partition["fs"] == "btrfs":
-            btrfs = "yes"
+            btrfs = True
 
         if "lvm2" in partition["fs"]:
-            lvm2 = "yes"
+            lvm2 = True
 
         if partition["mountPoint"] == "/" and "luksMapperName" in partition:
             encrypt_hook = True
 
-        if (partition["mountPoint"] == "/boot" and "luksMapperName" not in partition):
+        if partition["mountPoint"] == "/boot" and "luksMapperName" not in partition:
             unencrypted_separate_boot = True
 
         if partition["mountPoint"] == "/usr":
             hooks.append("usr")
 
     if encrypt_hook:
+        crypto_file = "crypto_keyfile.bin"
         if detect_plymouth() and unencrypted_separate_boot:
             hooks.append("plymouth-encrypt")
         else:
             hooks.append("encrypt")
-        if not unencrypted_separate_boot and \
-           os.path.isfile(
-               os.path.join(root_mount_point, "crypto_keyfile.bin")
+        if not unencrypted_separate_boot and os.path.isfile(
+               os.path.join(root_mount_point, crypto_file)
                ):
-            files.append("/crypto_keyfile.bin")
+            files.append(f"/{crypto_file}")
 
     if lvm2:
         hooks.append("lvm2")
 
     if swap_uuid != "":
+        hooks.extend(["resume"])
         if encrypt_hook and openswap_hook:
             hooks.extend(["openswap"])
-        hooks.extend(["resume", "filesystems"])
-    else:
-        hooks.extend(["filesystems"])
 
-    if btrfs == "yes" and cpu['proc0']['vendor_id'].lower() != "genuineintel":
+    if btrfs and not is_cpu_intel:
         modules.append("crc32c")
-    elif (btrfs == "yes"
-          and cpu['proc0']['vendor_id'].lower() == "genuineintel"):
+
+    elif btrfs and is_cpu_intel:
         modules.append("crc32c-intel")
-    else:
+
+    elif not btrfs:
         hooks.append("fsck")
 
     write_mkinitcpio_lines(hooks, modules, files, root_mount_point)
@@ -186,7 +196,7 @@ def modify_mkinitcpio_conf(partitions, root_mount_point):
 
 def run():
     """
-    Calls routine with given parameters to modify '/etc/mkinitcpio.conf'.
+    Calls routine with given parameters to modify "/etc/mkinitcpio.conf".
 
     :return:
     """
@@ -194,13 +204,13 @@ def run():
     root_mount_point = libcalamares.globalstorage.value("rootMountPoint")
 
     if not partitions:
-        libcalamares.utils.warning("partitions is empty, {!s}".format(partitions))
+        libcalamares.utils.warning(f"partitions are empty, {partitions}")
         return (_("Configuration Error"),
-                _("No partitions are defined for <pre>{!s}</pre> to use." ).format("initcpiocfg"))
+                _("No partitions are defined for <pre>initcpiocfg</pre>."))
     if not root_mount_point:
-        libcalamares.utils.warning("rootMountPoint is empty, {!s}".format(root_mount_point))
+        libcalamares.utils.warning(f"rootMountPoint is empty, {root_mount_point}")
         return (_("Configuration Error"),
-                _("No root mount point is given for <pre>{!s}</pre> to use." ).format("initcpiocfg"))
+                _("No root mount point for <pre>initcpiocfg</pre>."))
 
     modify_mkinitcpio_conf(partitions, root_mount_point)
 
