@@ -3,16 +3,11 @@
 #   SPDX-FileCopyrightText: 2020 Adriaan de Groot <groot@kde.org>
 #   SPDX-License-Identifier: BSD-2-Clause
 #
-find_package( Qt5 COMPONENTS Gui REQUIRED )
+find_package(Qt5 COMPONENTS Gui REQUIRED)
 
-set( PartitionModule_SOURCE_DIR .. )
+set(PartitionModule_SOURCE_DIR ..)
 
-include_directories(
-    ${Qt5Gui_INCLUDE_DIRS}
-    ${PartitionModule_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
+include_directories(${Qt5Gui_INCLUDE_DIRS} ${PartitionModule_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 calamares_add_test(
     partitionjobtests
@@ -39,7 +34,6 @@ calamares_add_test(
         kpmcore
     DEFINITIONS ${_partition_defs}
 )
-
 
 calamares_add_test(
     createlayoutstests
