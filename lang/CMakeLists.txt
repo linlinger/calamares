@@ -5,15 +5,15 @@
 #
 ###
 
-include( CalamaresAddTranslations )
+include(CalamaresAddTranslations)
 
 find_package(Qt5 COMPONENTS Xml)
-if( Qt5Xml_FOUND )
+if(Qt5Xml_FOUND)
     add_executable(txload txload.cpp)
     target_link_libraries(txload Qt5::Xml)
 endif()
 
-install_calamares_gettext_translations( python
+install_calamares_gettext_translations(python
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/lang/python
     FILENAME python.mo
     RENAME calamares-python.mo
