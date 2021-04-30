@@ -30,7 +30,7 @@ format:
   line_width: 120
   _help_tab_size:
   - How many spaces to tab for indent
-  tab_size: 2
+  tab_size: 4
   _help_use_tabchars:
   - If true, lines are indented using tab characters (utf-8
   - 0x09) instead of <tab_size> space characters (utf-8 0x20).
@@ -168,7 +168,7 @@ markup:
   canonicalize_hashrulers: true
   _help_enable_markup:
   - enable comment markup parsing and reflow
-  enable_markup: true
+  enable_markup: false
 _help_lint: Options affecting the linter
 lint:
   _help_disabled_codes:
