@@ -27,7 +27,7 @@ format:
   disable: false
   _help_line_width:
   - How wide to allow formatted cmake files
-  line_width: 80
+  line_width: 120
   _help_tab_size:
   - How many spaces to tab for indent
   tab_size: 2
@@ -70,7 +70,7 @@ format:
   _help_dangle_parens:
   - If a statement is wrapped to more than one line, than dangle
   - the closing parenthesis on its own line.
-  dangle_parens: false
+  dangle_parens: true
   _help_dangle_align:
   - If the trailing parenthesis must be 'dangled' on its on
   - 'line, then align it to this reference: `prefix`: the start'
@@ -97,10 +97,10 @@ format:
   line_ending: unix
   _help_command_case:
   - Format command names consistently as 'lower' or 'upper' case
-  command_case: canonical
+  command_case: lower
   _help_keyword_case:
   - Format keywords consistently as 'lower' or 'upper' case
-  keyword_case: unchanged
+  keyword_case: upper
   _help_always_wrap:
   - A list of command names which should always be wrapped
   always_wrap: []
